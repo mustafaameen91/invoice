@@ -11,8 +11,8 @@ app.use(cors());
 const connection = mysql.createConnection({
    host: "localhost",
    user: "root",
-   password: "",
-   database: "bill",
+   password: "@wLKt3Cu7k_8Aa*b",
+   database: "invoice",
    port: 3306,
 });
 
@@ -315,6 +315,17 @@ app.post("/addBill", function (req, res) {
       }
    );
 });
+
+const staticFileMiddleware = express.static(__dirname + "/dist");
+app.use(staticFileMiddleware);
+app.use(
+   history({
+      disableDotRule: true,
+      verbose: true,
+   })
+);
+
+app.use(staticFileMiddleware);
 
 app.listen(5000, () => {
    console.log("Server is running on port 5580.");
