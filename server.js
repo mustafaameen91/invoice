@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
+const history = require("connect-history-api-fallback");
 const bodyParser = require("body-parser");
 const mysql = require("mysql");
 
