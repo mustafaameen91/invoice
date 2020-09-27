@@ -8,6 +8,11 @@ const mysql = require("mysql");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
+// password: "@wLKt3Cu7k_8Aa*b",
+// database: "invoice",
+
+// password: "",
+//    database: "bill",
 
 const connection = mysql.createConnection({
    host: "localhost",
