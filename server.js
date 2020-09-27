@@ -1,8 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
-const history = require("connect-history-api-fallback");
 const bodyParser = require("body-parser");
+const history = require("connect-history-api-fallback");
 const mysql = require("mysql");
 
 app.use(bodyParser.json());
@@ -12,8 +12,8 @@ app.use(cors());
 const connection = mysql.createConnection({
    host: "localhost",
    user: "root",
-   password: "@wLKt3Cu7k_8Aa*b",
-   database: "invoice",
+   password: "",
+   database: "bill",
    port: 3306,
 });
 
@@ -253,6 +253,28 @@ app.get("/drivers", function (req, res) {
    });
 });
 
+app.get("/driver/:id", function (req, res) {
+   let driverId = req.params.id;
+   connection.query(
+      `SELECT * FROM driver WHERE idDriver = ${driverId}`,
+      (err, result) => {
+         if (err) {
+            res.status(500).send({
+               message: err.message || "Some error occurred .",
+            });
+         } else {
+            if (result.length < 1) {
+               res.status(404).send({
+                  message: err.message || "not found.",
+               });
+            } else {
+               res.send(result);
+            }
+         }
+      }
+   );
+});
+
 app.get("/allStores", function (req, res) {
    connection.query(`SELECT * FROM store`, (err, result) => {
       if (err) {
@@ -300,6 +322,42 @@ app.post("/addBill", function (req, res) {
                      result.insertId,
                   ]),
                ],
+               (err, result) => {
+                  if (err) {
+                     res.status(500).send({
+                        message:
+                           err.message ||
+                           "Some error occurred while creating the bill.",
+                     });
+                  } else {
+                     res.send(result);
+                  }
+               }
+            );
+         }
+      }
+   );
+});
+
+app.post("/editBill/:id", function (req, res) {
+   let billInformation = req.body;
+
+   connection.query(
+      `UPDATE  bill SET billNo = ${billInformation.billNo} ,driverId = ${billInformation.driverId} , storeId = ${billInformation.storeId},provinceId = ${billInformation.provinceId} WHERE idBill = ${billInformation.idBill}`,
+      (err, result) => {
+         if (err) {
+            console.log("error: ", err);
+            res.status(500).send({
+               message:
+                  err.message || "Some error occurred while updating the bill.",
+            });
+            return;
+         } else {
+            console.log("update bill: ", {
+               id: result,
+            });
+            connection.query(
+               `UPDATE billInfo SET customerName = '${billInformation.customerName}' , customerPhone = '${billInformation.customerPhone}' , address = '${billInformation.address}' , totalPrice = '${billInformation.totalPrice}', note = '${billInformation.note}' WHERE  idInfo = ${billInformation.idInfo} `,
                (err, result) => {
                   if (err) {
                      res.status(500).send({
