@@ -63,6 +63,73 @@ app.get("/driverBills", function (req, res) {
    );
 });
 
+app.get("/getTakeBills", function (req, res) {
+   connection.query(
+      `SELECT * FROM takeBill JOIN driver JOIN store JOIN province ON takeBill.driverId = driver.idDriver AND takeBill.storeId = store.idStore AND takeBill.provinceId = province.idProvince`,
+      (err, result) => {
+         if (err) {
+            res.send({ message: "can't solve problem" });
+            console.log(err);
+            return;
+         } else {
+            if (result.length > 0) {
+               res.send(result);
+            } else {
+               res.send({ message: "not found take bill" });
+            }
+         }
+      }
+   );
+});
+
+app.post("/addTakeBill", function (req, res) {
+   connection.query(
+      `INSERT INTO takeBill SET customerName = '${req.body.customerName}' , customerPhone = '${req.body.customerPhone}' , address= '${req.body.address}' , totalPrice = ${req.body.totalPrice} , note = '${req.body.note}' , billNo = ${req.body.billNo} , provinceId=${req.body.provinceId} , storeId=${req.body.storeId} , driverId = ${req.body.driverId} , invoiceNumber = ${req.body.invoiceNumber}`,
+      (err, result) => {
+         if (err) {
+            console.log(err);
+            res.send({ message: "can't store the take bill" });
+            return;
+         } else {
+            // res.send(result);
+            let date = new Date().toISOString().slice(0, 19).replace("T", " ");
+            connection.query(
+               `INSERT INTO bill (billNo,billDate,driverId,storeId,provinceId) VALUES (${req.body.billNo} ,'${date}' ,${req.body.sendDriver},${req.body.storeId},${req.body.provinceId})`,
+               (err, resultBill) => {
+                  if (err) {
+                     console.log("error: ", err);
+                     res.status(500).send({
+                        message:
+                           err.message ||
+                           "Some error occurred while creating the bill.",
+                     });
+                     return;
+                  } else {
+                     console.log("created bill: ", {
+                        id: result.insertId,
+                     });
+                     connection.query(
+                        `INSERT INTO billInfo (customerName  , customerPhone , address , totalPrice , note , billId) VALUES ('${req.body.customerName}' , '${req.body.customerPhone}' , '${req.body.address}' , ${req.body.totalPrice} , '${req.body.note}' , ${resultBill.insertId})`,
+                        (err, resultBillInfo) => {
+                           if (err) {
+                              res.status(500).send({
+                                 message:
+                                    err.message ||
+                                    "Some error occurred while creating the bill.",
+                              });
+                           } else {
+                              res.send(resultBillInfo);
+                           }
+                        }
+                     );
+                  }
+               }
+            );
+         }
+      }
+   );
+});
+
 app.get("/allProvince", function (req, res) {
    connection.query(`SELECT * FROM province`, (err, result) => {
       if (err) {
