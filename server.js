@@ -12,13 +12,13 @@ app.use(cors());
 // database: "invoice",
 
 // password: "",
-//    database: "bill",
+//database: "bill",
 
 const connection = mysql.createConnection({
    host: "localhost",
    user: "root",
-   password: "@wLKt3Cu7k_8Aa*b",
-   database: "invoice",
+   password: "",
+   database: "bill",
    port: 3306,
 });
 
@@ -43,6 +43,55 @@ app.get("/bills", function (req, res) {
          }
       }
    );
+});
+
+app.get("/billsP", function (req, res) {
+   let page = req.query.page;
+   var numPerPage = 8;
+   var skip = (page - 1) * numPerPage;
+   var limit = skip + "," + numPerPage; // Here we compute the LIMIT parameter for MySQL query
+   connection.query("SELECT count(*) as numRows FROM bill", function (
+      err,
+      rows,
+      fields
+   ) {
+      if (err) {
+         console.log("error: ", err);
+         result(err, null);
+      } else {
+         var numRows = rows[0].numRows;
+         var numPages = Math.ceil(numRows / numPerPage);
+         connection.query(
+            "SELECT * FROM bill JOIN store JOIN province JOIN billInfo ON bill.storeId = store.idStore AND billInfo.billId = bill.idBill AND province.idProvince = bill.provinceId LEFT JOIN driver ON bill.driverId = driver.idDriver LIMIT " +
+               limit,
+            function (err, rows, fields) {
+               if (err) {
+                  console.log("error: ", err);
+                  res.send(err);
+               } else {
+                  console.log(rows);
+
+                  res.send({ bills: rows, num: numPages });
+               }
+            }
+         );
+      }
+   });
+   // connection.query(
+   //    `SELECT * FROM bill JOIN store JOIN province JOIN billInfo ON bill.storeId = store.idStore AND billInfo.billId = bill.idBill AND province.idProvince = bill.provinceId LEFT JOIN driver ON bill.driverId = driver.idDriver`,
+   //    (err, result) => {
+   //       if (err) {
+   //          res.status(404).send({ message: "can't solve problem" });
+   //          return;
+   //       } else {
+   //          if (result.length > 0) {
+   //             res.send(result);
+   //          } else {
+   //             res.status(404).send({ message: "not found bills" });
+   //          }
+   //       }
+   //    }
+   // );
 });
 
 app.get("/driverBills", function (req, res) {
